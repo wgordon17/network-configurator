@@ -9,9 +9,9 @@
     "start": "http-server dist"
   },
   "dependencies": {
-    "http-server": "^0.11.1",
     "bootstrap-vue": "^2.1.0",
     "core-js": "^3.6.4",
+    "http-server": "^0.11.1",
     "netmask": "^1.0.6",
     "vue": "^2.6.11",
     "vuelidate": "^0.7.5"

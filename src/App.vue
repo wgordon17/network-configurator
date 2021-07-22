@@ -1,96 +1,100 @@
 <template>
   <div id="app" class="container">
-    <div class="row">
-      <form class="col-md-4">
-        <div class="form-group">
-          <h3>Availability Zone Config</h3>
-          <div class="form-check">
-            <input
-              @input="e => azConfig = 'single'"
-              type="radio"
-              name="azConfig"
-              value="single"
-              id="single-az"
-              class="form-check-input"
-              checked
-            >
-            <label for="single-az" class="form-check-label">Single-AZ</label>
-          </div>
-          <div class="form-check">
-            <input
-              @input="e => azConfig = 'multi'"
-              type="radio"
-              name="azConfig"
-              value="multi"
-              id="multi-az"
-              class="form-check-input"
-            >
-            <label for="multi-az" class="form-check-label">Multi-AZ</label>
+    <b-tabs content-class="mt-3">
+      <b-tab title="CIDR">
+        <div class="row">
+          <form class="col-md-4">
+            <div class="form-group">
+              <h3>Availability Zone Config</h3>
+              <div class="form-check">
+                <input
+                  @input="e => azConfig = 'single'"
+                  type="radio"
+                  name="azConfig"
+                  value="single"
+                  id="single-az"
+                  class="form-check-input"
+                  checked
+                >
+                <label for="single-az" class="form-check-label">Single-AZ</label>
+              </div>
+              <div class="form-check">
+                <input
+                  @input="e => azConfig = 'multi'"
+                  type="radio"
+                  name="azConfig"
+                  value="multi"
+                  id="multi-az"
+                  class="form-check-input"
+                >
+                <label for="multi-az" class="form-check-label">Multi-AZ</label>
+              </div>
+            </div>
+            <div class="form-group mt-5">
+              <h3>Network Config</h3>
+              <label for="machine">Machine CIDR</label>
+              <input
+                @input="e => machineCIDR = e.target.value || initial['machineCIDR']"
+                type="text"
+                name="machine"
+                class="form-control form-control-lg"
+                :placeholder="machineCIDR"
+              >
+              <div v-show="!validCidr(machineCIDR)" class="invalid-text">
+                Use proper CIDR notation, e.g., {{ initial['machineCIDR'] }}
+              </div>
+              <label for="service">Service CIDR</label>
+              <input
+                @input="e => serviceCIDR = e.target.value || initial['serviceCIDR']"
+                type="text"
+                name="service"
+                class="form-control form-control-lg"
+                :placeholder="serviceCIDR"
+              >
+              <div v-show="!validCidr(serviceCIDR)" class="invalid-text">
+                Use proper CIDR notation, e.g., {{ initial['serviceCIDR'] }}
+              </div>
+              <label for="pod">Pod CIDR</label>
+              <input
+                @input="e => podCIDR = e.target.value || initial['podCIDR']"
+                type="text"
+                name="pod"
+                class="form-control form-control-lg"
+                :placeholder="podCIDR"
+              >
+              <div v-show="!validCidr(podCIDR)" class="invalid-text">
+                Use proper CIDR notation, e.g., {{ initial['podCIDR'] }}
+              </div>
+              <label for="prefix">Host Prefix</label>
+              <input
+                @input="e => hostPrefix = e.target.value || initial['hostPrefix']"
+                type="text"
+                name="prefix"
+                class="form-control form-control-lg"
+                :placeholder="hostPrefix"
+              >
+              <div v-show="!validPrefix(hostPrefix)" class="invalid-text">
+                Use proper host subnet notation, e.g., {{ initial['hostPrefix'] }}
+              </div>
+            </div>
+          </form>
+          <div class="col-md-6 my-auto">
+            <p v-if="totalNodeCount">
+              Maximum number of possible nodes: {{ totalNodeCount }}<br>
+              <span :class="[ hasEnoughNodes ? 'valid-text': 'invalid-text' ]">(Minimum of {{ nodeMinimum }} nodes required)</span><br>
+              <span style="font-size: 80%">Node count limited by {{ nodeLimitations }}</span>
+            </p>
+            <p v-if="serviceCount">
+              Maximum number of possible services in a cluster: {{ serviceCount }}<br>
+              <span v-if="serviceCount < 5000" class="invalid-text">Having a limited Service CIDR can severely limit your ability to scale in the future.</span>
+            </p>
+            <p v-if="podCount">
+              Maximum number of possible pods on a node: {{ podCount }}
+            </p>
           </div>
         </div>
-        <div class="form-group mt-5">
-          <h3>Network Config</h3>
-          <label for="machine">Machine CIDR</label>
-          <input
-            @input="e => machineCIDR = e.target.value || initial['machineCIDR']"
-            type="text"
-            name="machine"
-            class="form-control form-control-lg"
-            :placeholder="machineCIDR"
-          >
-          <div v-show="!validCidr(machineCIDR)" class="invalid-text">
-            Use proper CIDR notation, e.g., {{ initial['machineCIDR'] }}
-          </div>
-          <label for="service">Service CIDR</label>
-          <input
-            @input="e => serviceCIDR = e.target.value || initial['serviceCIDR']"
-            type="text"
-            name="service"
-            class="form-control form-control-lg"
-            :placeholder="serviceCIDR"
-          >
-          <div v-show="!validCidr(serviceCIDR)" class="invalid-text">
-            Use proper CIDR notation, e.g., {{ initial['serviceCIDR'] }}
-          </div>
-          <label for="pod">Pod CIDR</label>
-          <input
-            @input="e => podCIDR = e.target.value || initial['podCIDR']"
-            type="text"
-            name="pod"
-            class="form-control form-control-lg"
-            :placeholder="podCIDR"
-          >
-          <div v-show="!validCidr(podCIDR)" class="invalid-text">
-            Use proper CIDR notation, e.g., {{ initial['podCIDR'] }}
-          </div>
-          <label for="prefix">Host Prefix</label>
-          <input
-            @input="e => hostPrefix = e.target.value || initial['hostPrefix']"
-            type="text"
-            name="prefix"
-            class="form-control form-control-lg"
-            :placeholder="hostPrefix"
-          >
-          <div v-show="!validPrefix(hostPrefix)" class="invalid-text">
-            Use proper host subnet notation, e.g., {{ initial['hostPrefix'] }}
-          </div>
-        </div>
-      </form>
-      <div class="col-md-6 my-auto">
-        <p v-if="totalNodeCount">
-          Maximum number of possible nodes: {{ totalNodeCount }}<br>
-          <span :class="[ hasEnoughNodes ? 'valid-text': 'invalid-text' ]">(Minimum of {{ nodeMinimum }} nodes required)</span><br>
-          <span style="font-size: 80%">Node count limited by {{ nodeLimitations }}</span>
-        </p>
-        <p v-if="serviceCount">
-          Maximum number of possible services in a cluster: {{ serviceCount }}<br>
-          <span v-if="serviceCount < 5000" class="invalid-text">Having a limited Service CIDR can severely limit your ability to scale in the future.</span>
-        </p>
-        <p v-if="podCount">
-          Maximum number of possible pods on a node: {{ podCount }}
-        </p>
-      </div>
-    </div>
+      </b-tab>
+    </b-tabs>
   </div>
 </template>
 
@@ -103,9 +107,9 @@ export default {
   name: 'App',
   data() {
     return {
-      machineCIDR: '10.0.0.0/22',
+      machineCIDR: '10.0.0.0/16',
       serviceCIDR: '172.30.0.0/16',
-      podCIDR: '10.128.0.0/20',
+      podCIDR: '10.128.0.0/14',
       hostPrefix: '/23',
       azConfig: 'single',
       initial: {}
@@ -132,8 +136,13 @@ export default {
     machineNetmask() {
       if (this.validCidr(this.machineCIDR)) {
         let machine_subnets = this.machineCIDR.split('/');
-        // machine subnets need 4 added to /<whatever> to account for being split into 16 subnets
-        return new Netmask(machine_subnets[0] + '/' + (parseFloat(machine_subnets[1]) + 4));
+        if (this.azConfig === 'single') {
+          // machine subnet has just one CIDR split for single-az
+          return new Netmask(machine_subnets[0] + '/' + (parseFloat(machine_subnets[1]) + 1));
+        } else {
+          // machine subnet has 3 CIDR splits for multi-az
+          return new Netmask(machine_subnets[0] + '/' + (parseFloat(machine_subnets[1]) + 3));
+        }
       } else {
         return false;
       }
